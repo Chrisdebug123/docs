@@ -1,0 +1,161 @@
+---
+title: "Multi-Family House Assets"
+description: "Understanding the multi-family house investment model in Asset Laboratory"
+---
+
+## Overview
+
+Asset Laboratory Professional has been optimized for managing multi-family house (MFH) investments. This specialized focus enables comprehensive tracking of rental properties with multiple units, providing investors with crucial metrics for portfolio management.
+
+## Asset Types
+
+The system supports various multi-family house categories:
+
+<CardGroup cols={2}>
+  <Card title="Standard MFH" icon="building">
+    Traditional multi-family houses with residential units only
+  </Card>
+  <Card title="Mixed-Use Buildings" icon="store">
+    Combination of residential and commercial spaces
+  </Card>
+  <Card title="Monument Protected" icon="landmark">
+    Listed buildings with special tax advantages
+  </Card>
+  <Card title="New Construction" icon="hammer">
+    Recently built or under-construction properties
+  </Card>
+</CardGroup>
+
+## Key Data Fields
+
+### Building Information
+- **Total Units**: Number of residential units in the building
+- **Rentable Area**: Total square meters available for rent
+- **Vacancy Rate**: Percentage of currently unoccupied units
+- **Floor Count**: Number of floors in the building
+- **Commercial Units**: Count of commercial spaces (if applicable)
+
+### Financial Metrics
+- **Purchase Price**: Total acquisition cost
+- **Factor**: Purchase price divided by annual net cold rent
+- **Gross Initial Yield**: Annual return on investment
+- **Cash Flow**: Monthly net income after all expenses
+- **Rent Increase Potential**: Percentage opportunity for rent growth
+
+### Investment Analysis
+- **Net Rental Yield**: Return after operating costs
+- **Equity Return**: Return on invested equity capital
+- **Amortization Period**: Years to recover investment
+- **CapEx Budget**: Annual capital expenditure allocation
+- **Modernization Backlog**: Estimated renovation costs
+
+### Legal & Regulatory
+- **Milieuschutz**: Tenant protection zone status
+- **Monument Protection**: Historic preservation status
+- **Rent Control**: Applicable rent increase limitations
+- **Conversion Ban**: Restrictions on condo conversions
+- **Leasehold**: Ground lease arrangements if applicable
+
+## Status Classifications
+
+Properties are categorized by their rental status:
+
+- **Fully Rented**: 100% occupancy rate
+- **Partially Rented**: Some units available
+- **Vacant**: No current tenants
+- **Under Renovation**: Temporarily unavailable
+- **Sold**: No longer in portfolio
+
+## Management Features
+
+### Unit Management
+Track individual units within each property:
+- Occupancy status per unit
+- Average unit size
+- Rental income per unit
+- Tenant tenure duration
+
+### Operational Tracking
+Monitor ongoing costs and operations:
+- Property management fees
+- Maintenance reserves
+- Operating cost prepayments
+- Heating cost allocations
+
+### Growth Potential
+Identify expansion opportunities:
+- Roof conversion possibilities
+- Building extension potential
+- Available development square meters
+- Modernization requirements
+
+## API Integration
+
+The updated schema is reflected in our API endpoints:
+
+### Get All Assets
+```http
+GET /api/assets
+```
+
+Returns multi-family house properties with all relevant fields including:
+- Building specifications
+- Financial performance metrics
+- Legal status information
+- Management details
+
+### Asset Filtering
+Query parameters support filtering by:
+- `vermietungsstatus`: Rental status
+- `kategorie`: Property type
+- `stadt`: City location
+- `faktor`: Price factor range
+- `anzahl_wohneinheiten`: Unit count
+
+## Database Schema
+
+The Prisma schema has been extensively updated to support MFH investments:
+
+```prisma
+model Asset {
+  // Location Data
+  stadt               String?
+  bezirk              String?
+  adresse             String?
+
+  // Building Information
+  anzahl_wohneinheiten Int?
+  gesamtmietflaeche   Float?
+  leerstandsquote     Float?
+
+  // Financial Metrics
+  ist_jahresnettokaltmiete    Float?
+  soll_jahresnettokaltmiete   Float?
+  cashflow_monatlich          Float?
+
+  // Investment Metrics
+  nettomietrendite    Float?
+  eigenkapitalrendite Float?
+  amortisationsdauer  Float?
+}
+```
+
+## Best Practices
+
+### Data Entry
+- Always record both actual and potential rental income
+- Document all legal restrictions affecting the property
+- Track modernization needs for budget planning
+- Maintain accurate vacancy rates for yield calculations
+
+### Analysis Tips
+- Compare factor values across similar properties
+- Monitor cash flow trends monthly
+- Review rent increase potential annually
+- Track operating cost ratios for efficiency
+
+### Portfolio Management
+- Diversify across different MFH categories
+- Balance fully rented vs. value-add opportunities
+- Consider location factors (Milieuschutz, transportation)
+- Plan for long-term CapEx requirements
