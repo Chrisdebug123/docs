@@ -1,0 +1,284 @@
+---
+title: "Installation"
+description: "Complete installation guide for Asset Laboratory Professional"
+---
+
+## Prerequisites
+
+Before installing Asset Laboratory Professional, ensure you have the following prerequisites:
+
+<AccordionGroup>
+  <Accordion title="System Requirements">
+    - **Node.js**: Version 22.0.0 or higher
+    - **pnpm**: Version 9.15.0 or higher
+    - **PostgreSQL**: Version 14 or higher
+    - **Git**: Version 2.0 or higher
+    - **Operating System**: macOS, Linux, or Windows 10/11 with WSL2
+  </Accordion>
+
+  <Accordion title="Required Accounts">
+    - **GitHub Account**: For repository access and issue tracking
+    - **Doppler Account**: For secure environment variable management
+    - **PostgreSQL Database**: Local or cloud-hosted instance
+  </Accordion>
+
+  <Accordion title="Optional Services">
+    - **Supabase**: For cloud database hosting (future migration)
+    - **Vercel**: For production deployment
+    - **Plausible Analytics**: For privacy-focused analytics
+  </Accordion>
+</AccordionGroup>
+
+## Installation Steps
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Chrisdebug123/Asset_Laboratory_professional.git
+cd Asset_Laboratory_professional
+```
+
+### 2. Install pnpm
+
+If you don't have pnpm installed:
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install -g pnpm
+    ```
+  </Tab>
+  <Tab title="Homebrew (macOS)">
+    ```bash
+    brew install pnpm
+    ```
+  </Tab>
+  <Tab title="Curl">
+    ```bash
+    curl -fsSL https://get.pnpm.io/install.sh | sh -
+    ```
+  </Tab>
+</Tabs>
+
+### 3. Install Dependencies
+
+```bash
+pnpm install
+```
+
+This will install all dependencies for the monorepo including:
+- Client (Next.js frontend)
+- Server (Express backend)
+- Shared utilities
+
+### 4. Setup Doppler
+
+Doppler is used for secure environment variable management:
+
+<Steps>
+  <Step title="Install Doppler CLI">
+    <Tabs>
+      <Tab title="macOS">
+        ```bash
+        brew install dopplerhq/cli/doppler
+        ```
+      </Tab>
+      <Tab title="Linux">
+        ```bash
+        curl -Ls --tlsv1.2 --proto "=https" https://cli.doppler.com/install.sh | sudo sh
+        ```
+      </Tab>
+      <Tab title="Windows">
+        ```bash
+        scoop bucket add doppler https://github.com/DopplerHQ/scoop-doppler.git
+        scoop install doppler
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Authenticate with Doppler">
+    ```bash
+    doppler login
+    ```
+  </Step>
+
+  <Step title="Setup Project">
+    ```bash
+    doppler setup
+    ```
+    Select the appropriate project and config when prompted.
+  </Step>
+</Steps>
+
+### 5. Database Setup
+
+<Tabs>
+  <Tab title="Local PostgreSQL">
+    1. Install PostgreSQL locally:
+    ```bash
+    # macOS
+    brew install postgresql
+    brew services start postgresql
+
+    # Linux
+    sudo apt-get install postgresql
+    sudo systemctl start postgresql
+    ```
+
+    2. Create a database:
+    ```bash
+    createdb asset_laboratory_dev
+    ```
+
+    3. Configure connection in Doppler:
+    ```bash
+    doppler secrets set DATABASE_URL "postgresql://username:password@localhost:5432/asset_laboratory_dev"
+    ```
+  </Tab>
+
+  <Tab title="Docker">
+    1. Use Docker Compose:
+    ```yaml
+    # docker-compose.yml
+    version: '3.8'
+    services:
+      postgres:
+        image: postgres:14
+        environment:
+          POSTGRES_DB: asset_laboratory_dev
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - "5432:5432"
+        volumes:
+          - postgres_data:/var/lib/postgresql/data
+
+    volumes:
+      postgres_data:
+    ```
+
+    2. Start the database:
+    ```bash
+    docker-compose up -d
+    ```
+  </Tab>
+
+  <Tab title="Cloud (Supabase)">
+    1. Create a project at [supabase.com](https://supabase.com)
+    2. Copy your database URL from project settings
+    3. Set in Doppler:
+    ```bash
+    doppler secrets set DATABASE_URL "your-supabase-url"
+    ```
+  </Tab>
+</Tabs>
+
+### 6. Run Database Migrations
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+```
+
+### 7. Start Development Server
+
+```bash
+pnpm dev
+```
+
+This starts:
+- Frontend at http://localhost:3000
+- Backend API at http://localhost:3001
+- Prisma Studio at http://localhost:5555 (optional)
+
+## Verify Installation
+
+After installation, verify everything is working:
+
+<Checklist>
+  - [ ] Frontend loads at http://localhost:3000
+  - [ ] API health check responds at http://localhost:3001/api/health
+  - [ ] Database connection is established
+  - [ ] Authentication system is functional
+  - [ ] Theme switching works (light/dark/system)
+</Checklist>
+
+## Common Issues
+
+<AccordionGroup>
+  <Accordion title="Port Already in Use">
+    If ports 3000 or 3001 are already in use:
+    ```bash
+    pnpm kill-ports
+    ```
+    Or manually:
+    ```bash
+    lsof -ti:3000 | xargs kill -9
+    lsof -ti:3001 | xargs kill -9
+    ```
+  </Accordion>
+
+  <Accordion title="Database Connection Failed">
+    1. Check PostgreSQL is running:
+    ```bash
+    pg_isready
+    ```
+    2. Verify DATABASE_URL in Doppler:
+    ```bash
+    doppler secrets get DATABASE_URL
+    ```
+    3. Test connection:
+    ```bash
+    npx prisma db pull
+    ```
+  </Accordion>
+
+  <Accordion title="Doppler Authentication Issues">
+    1. Re-authenticate:
+    ```bash
+    doppler logout
+    doppler login
+    ```
+    2. Verify project setup:
+    ```bash
+    doppler setup
+    ```
+    3. Check secrets:
+    ```bash
+    doppler secrets
+    ```
+  </Accordion>
+
+  <Accordion title="pnpm Installation Failed">
+    1. Clear cache:
+    ```bash
+    pnpm store prune
+    ```
+    2. Remove node_modules:
+    ```bash
+    rm -rf node_modules packages/*/node_modules
+    ```
+    3. Reinstall:
+    ```bash
+    pnpm install
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Start building with Asset Laboratory Professional
+  </Card>
+  <Card title="Development" icon="code" href="/development">
+    Learn about the development workflow
+  </Card>
+  <Card title="Configuration" icon="gear" href="/concepts/architecture">
+    Understand the system architecture
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/introduction">
+    Explore the API documentation
+  </Card>
+</CardGroup>

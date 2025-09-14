@@ -1,0 +1,562 @@
+---
+title: "Deployment Overview"
+description: "Complete guide for deploying Asset Laboratory Professional to production"
+---
+
+## Deployment Options
+
+Asset Laboratory Professional supports multiple deployment strategies to fit your infrastructure needs:
+
+<CardGroup cols={2}>
+  <Card title="Vercel" icon="triangle" href="/deployment/vercel">
+    Deploy to Vercel for automatic scaling and edge functions
+  </Card>
+  <Card title="Docker" icon="docker" href="/deployment/docker">
+    Containerized deployment with Docker and Kubernetes
+  </Card>
+  <Card title="Traditional VPS" icon="server">
+    Deploy to any Linux server with Node.js support
+  </Card>
+  <Card title="Cloud Platforms" icon="cloud">
+    Deploy to AWS, Google Cloud, or Azure
+  </Card>
+</CardGroup>
+
+## Production Requirements
+
+### System Requirements
+
+<AccordionGroup>
+  <Accordion title="Minimum Requirements">
+    - **CPU**: 2 vCPUs
+    - **RAM**: 4GB
+    - **Storage**: 20GB SSD
+    - **Node.js**: 22.0.0+
+    - **PostgreSQL**: 14+
+    - **Network**: HTTPS support
+  </Accordion>
+
+  <Accordion title="Recommended Requirements">
+    - **CPU**: 4+ vCPUs
+    - **RAM**: 8GB+
+    - **Storage**: 50GB+ SSD
+    - **CDN**: CloudFlare or similar
+    - **Database**: Managed PostgreSQL (Supabase, RDS, etc.)
+    - **Monitoring**: Application monitoring service
+  </Accordion>
+</AccordionGroup>
+
+## Pre-Deployment Checklist
+
+Before deploying to production, ensure you've completed these steps:
+
+<Checklist>
+  - [ ] Environment variables configured in Doppler
+  - [ ] Database migrations tested and ready
+  - [ ] SSL certificates configured
+  - [ ] Domain name pointed to deployment
+  - [ ] Backup strategy implemented
+  - [ ] Monitoring and logging setup
+  - [ ] Security headers configured
+  - [ ] Rate limiting enabled
+  - [ ] CORS policy configured
+  - [ ] Error tracking service connected
+</Checklist>
+
+## Environment Configuration
+
+### Production Environment Variables
+
+Configure these essential environment variables for production:
+
+```bash
+# Application
+NODE_ENV=production
+PORT=3000
+API_PORT=3001
+
+# Database
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
+DATABASE_POOL_MAX=20
+DATABASE_SSL=true
+
+# Authentication
+JWT_SECRET=your-secure-jwt-secret
+JWT_EXPIRY=7d
+REFRESH_TOKEN_EXPIRY=30d
+
+# Security
+CORS_ORIGIN=https://yourdomain.com
+RATE_LIMIT_MAX=100
+RATE_LIMIT_WINDOW=15m
+
+# External Services
+DOPPLER_TOKEN=dp.st.prod.xxxxxxxxxxxx
+GITHUB_TOKEN=ghp_xxxxxxxxxxxx
+SENTRY_DSN=https://xxxxx@sentry.io/xxxxx
+
+# Optional Services
+REDIS_URL=redis://localhost:6379
+PLAUSIBLE_DOMAIN=yourdomain.com
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=587
+SMTP_USER=apikey
+SMTP_PASS=your-api-key
+```
+
+### Doppler Setup for Production
+
+<Steps>
+  <Step title="Create Production Config">
+    ```bash
+    doppler configs create production
+    ```
+  </Step>
+
+  <Step title="Set Production Secrets">
+    ```bash
+    doppler secrets set --config production
+    ```
+  </Step>
+
+  <Step title="Generate Service Token">
+    ```bash
+    doppler configs tokens create \
+      --config production \
+      --name "Production Server" \
+      --plain
+    ```
+  </Step>
+
+  <Step title="Use Token in Deployment">
+    Set the `DOPPLER_TOKEN` environment variable in your deployment platform
+  </Step>
+</Steps>
+
+## Build Process
+
+### Production Build
+
+```bash
+# Install dependencies
+pnpm install --frozen-lockfile
+
+# Generate Prisma client
+npx prisma generate
+
+# Build all packages
+pnpm build
+
+# Run type checking
+pnpm type-check
+
+# Run tests
+pnpm test
+
+# Run linting
+pnpm lint
+```
+
+### Build Optimization
+
+```javascript
+// next.config.js optimizations
+module.exports = {
+  productionBrowserSourceMaps: false,
+  compress: true,
+  poweredByHeader: false,
+  generateEtags: true,
+
+  images: {
+    domains: ['your-cdn.com'],
+    formats: ['image/avif', 'image/webp'],
+  },
+
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ['@heroui/react'],
+  },
+
+  headers: async () => [
+    {
+      source: '/:path*',
+      headers: [
+        {
+          key: 'X-Frame-Options',
+          value: 'DENY',
+        },
+        {
+          key: 'X-Content-Type-Options',
+          value: 'nosniff',
+        },
+        {
+          key: 'X-XSS-Protection',
+          value: '1; mode=block',
+        },
+      ],
+    },
+  ],
+};
+```
+
+## Database Migration Strategy
+
+### Safe Migration Process
+
+<Steps>
+  <Step title="Backup Database">
+    ```bash
+    pg_dump $DATABASE_URL > backup-$(date +%Y%m%d).sql
+    ```
+  </Step>
+
+  <Step title="Test Migrations">
+    ```bash
+    # Create test database
+    createdb asset_lab_test
+
+    # Apply migrations
+    DATABASE_URL=test_url npx prisma migrate deploy
+
+    # Run tests
+    pnpm test:integration
+    ```
+  </Step>
+
+  <Step title="Deploy Migrations">
+    ```bash
+    npx prisma migrate deploy
+    ```
+  </Step>
+
+  <Step title="Verify Deployment">
+    ```bash
+    npx prisma db pull
+    npx prisma validate
+    ```
+  </Step>
+</Steps>
+
+## Deployment Strategies
+
+### Blue-Green Deployment
+
+Deploy with zero downtime using blue-green strategy:
+
+```mermaid
+graph LR
+    A[Load Balancer] --> B[Blue Environment - Current]
+    A -.-> C[Green Environment - New]
+    B --> D[Database]
+    C --> D
+```
+
+1. Deploy new version to green environment
+2. Run smoke tests on green
+3. Switch load balancer to green
+4. Keep blue as rollback option
+
+### Rolling Deployment
+
+Gradually update instances:
+
+```yaml
+# kubernetes deployment
+spec:
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+```
+
+### Canary Deployment
+
+Test with a small percentage of traffic:
+
+```nginx
+# nginx config for canary
+upstream app {
+  server prod:3000 weight=9;  # 90% traffic
+  server canary:3000 weight=1; # 10% traffic
+}
+```
+
+## Health Checks
+
+### Application Health Endpoint
+
+```typescript
+// server/src/routes/health.ts
+app.get('/health', async (req, res) => {
+  const health = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: await checkDatabase(),
+    memory: process.memoryUsage(),
+    environment: process.env.NODE_ENV,
+  };
+
+  res.status(200).json(health);
+});
+```
+
+### Monitoring Setup
+
+```yaml
+# docker-compose monitoring
+services:
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3005:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+```
+
+## Security Considerations
+
+### Production Security Checklist
+
+<Checklist>
+  - [ ] Use HTTPS everywhere
+  - [ ] Enable HSTS headers
+  - [ ] Implement CSP headers
+  - [ ] Setup WAF (Web Application Firewall)
+  - [ ] Enable rate limiting
+  - [ ] Implement DDoS protection
+  - [ ] Use secure session management
+  - [ ] Enable audit logging
+  - [ ] Implement backup encryption
+  - [ ] Setup intrusion detection
+</Checklist>
+
+### Security Headers
+
+```typescript
+// middleware/security.ts
+export const securityHeaders = {
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'X-XSS-Protection': '1; mode=block',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'",
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
+```
+
+## Performance Optimization
+
+### CDN Configuration
+
+```javascript
+// CDN setup for static assets
+const cdnUrl = process.env.CDN_URL || 'https://cdn.yourdomain.com';
+
+module.exports = {
+  assetPrefix: isProd ? cdnUrl : '',
+  images: {
+    loader: 'custom',
+    loaderFile: './cdn-loader.js',
+  },
+};
+```
+
+### Caching Strategy
+
+```nginx
+# nginx caching config
+location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+  expires 1y;
+  add_header Cache-Control "public, immutable";
+}
+
+location /api {
+  add_header Cache-Control "no-cache, no-store, must-revalidate";
+}
+```
+
+## Backup and Recovery
+
+### Automated Backup Script
+
+```bash
+#!/bin/bash
+# backup.sh
+
+# Database backup
+pg_dump $DATABASE_URL | gzip > db-$(date +%Y%m%d-%H%M%S).sql.gz
+
+# Upload to S3
+aws s3 cp db-*.sql.gz s3://your-backup-bucket/
+
+# Clean old backups (keep 30 days)
+find . -name "db-*.sql.gz" -mtime +30 -delete
+
+# Notify monitoring
+curl -X POST $MONITORING_WEBHOOK \
+  -d "Backup completed at $(date)"
+```
+
+### Recovery Plan
+
+<Steps>
+  <Step title="Assess Situation">
+    Determine the scope and cause of the issue
+  </Step>
+
+  <Step title="Communicate">
+    Notify stakeholders and update status page
+  </Step>
+
+  <Step title="Execute Recovery">
+    ```bash
+    # Restore from backup
+    gunzip < backup.sql.gz | psql $DATABASE_URL
+
+    # Verify data integrity
+    npx prisma db pull
+    ```
+  </Step>
+
+  <Step title="Post-Mortem">
+    Document incident and implement preventive measures
+  </Step>
+</Steps>
+
+## Monitoring and Logging
+
+### Essential Metrics
+
+<Tabs>
+  <Tab title="Application Metrics">
+    - Request rate and response times
+    - Error rates and types
+    - Active users and sessions
+    - API endpoint performance
+    - Background job status
+  </Tab>
+
+  <Tab title="Infrastructure Metrics">
+    - CPU and memory usage
+    - Disk I/O and space
+    - Network throughput
+    - Database connections
+    - Cache hit rates
+  </Tab>
+
+  <Tab title="Business Metrics">
+    - User registrations
+    - Asset creation rate
+    - API usage by endpoint
+    - Feature adoption
+    - User engagement
+  </Tab>
+</Tabs>
+
+### Logging Configuration
+
+```typescript
+// logging/winston.config.ts
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.File({
+      filename: 'error.log',
+      level: 'error'
+    }),
+    new winston.transports.File({
+      filename: 'combined.log'
+    }),
+  ],
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple(),
+  }));
+}
+```
+
+## Post-Deployment
+
+### Verification Steps
+
+<Checklist>
+  - [ ] All services are running
+  - [ ] Database connections established
+  - [ ] Authentication working
+  - [ ] API endpoints responding
+  - [ ] Frontend loading correctly
+  - [ ] SSL certificates valid
+  - [ ] Monitoring alerts configured
+  - [ ] Backup system operational
+  - [ ] Error tracking connected
+  - [ ] Performance metrics acceptable
+</Checklist>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Application Won't Start">
+    1. Check environment variables with Doppler
+    2. Verify database connection
+    3. Check port availability
+    4. Review application logs
+    5. Verify Node.js version
+  </Accordion>
+
+  <Accordion title="Database Connection Issues">
+    1. Verify DATABASE_URL format
+    2. Check network connectivity
+    3. Confirm SSL requirements
+    4. Test with `npx prisma db pull`
+    5. Check connection pool settings
+  </Accordion>
+
+  <Accordion title="Performance Problems">
+    1. Check server resources
+    2. Review database query performance
+    3. Analyze bundle size
+    4. Check CDN configuration
+    5. Review caching headers
+  </Accordion>
+
+  <Accordion title="Security Warnings">
+    1. Update all dependencies
+    2. Review security headers
+    3. Check SSL configuration
+    4. Audit npm packages
+    5. Review CORS settings
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Vercel Deployment" icon="triangle" href="/deployment/vercel">
+    Deploy to Vercel platform
+  </Card>
+  <Card title="Docker Setup" icon="docker" href="/deployment/docker">
+    Containerize your application
+  </Card>
+  <Card title="Doppler Setup" icon="key" href="/deployment/doppler-setup">
+    Configure secrets management
+  </Card>
+  <Card title="Monitoring" icon="chart-line" href="/guides/monitoring">
+    Setup application monitoring
+  </Card>
+</CardGroup>

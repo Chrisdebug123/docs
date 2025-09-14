@@ -1,101 +1,150 @@
 ---
 title: "Asset Laboratory Professional"
-description: "Enterprise-grade asset management system documentation"
+description: "Enterprise-grade asset management platform built with modern web technologies"
 ---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.png"
+  alt="Asset Laboratory Professional"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.png"
+  alt="Asset Laboratory Professional"
+/>
 
 ## Welcome to Asset Laboratory Professional
 
-Your comprehensive asset tracking and management solution built with modern web technologies.
+Asset Laboratory Professional is a comprehensive asset management platform designed for modern enterprises. Built with cutting-edge technologies including Next.js 15, React 19, and HeroUI Pro, it provides a robust foundation for tracking, managing, and analyzing your organization's assets.
 
-### Hello World! 👋
+## Key Features
 
-This documentation was just updated and deployed via Mintlify.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Modern Tech Stack"
+    icon="layer-group"
+    href="/quickstart"
   >
-    Edit your docs locally and preview them in real time.
+    Built with Next.js 15, React 19, HeroUI Pro, and Tailwind CSS 4 for a blazing-fast, responsive experience
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
+    title="Enterprise Security"
+    icon="shield-halved"
+    href="/concepts/authentication"
   >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+    Secure authentication, role-based access control, and encrypted data storage with Doppler integration
   </Card>
   <Card
-    title="API documentation"
-    icon="terminal"
+    title="Real-time Updates"
+    icon="bolt"
+    href="/concepts/database"
+  >
+    PostgreSQL with Prisma ORM for reliable data management and real-time synchronization
+  </Card>
+  <Card
+    title="API-First Design"
+    icon="plug"
     href="/api-reference/introduction"
   >
-    Auto-generate API documentation from OpenAPI specifications.
+    RESTful API with comprehensive documentation and interactive playground for seamless integrations
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Quick Start
 
-Everything you need to create world-class documentation.
+Get up and running with Asset Laboratory Professional in minutes:
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+<Steps>
+  <Step title="Clone the Repository">
+    ```bash
+    git clone https://github.com/Chrisdebug123/Asset_Laboratory_professional
+    cd Asset_Laboratory_professional
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    ```bash
+    pnpm install
+    ```
+  </Step>
+
+  <Step title="Setup Environment">
+    Configure Doppler for secure environment management:
+    ```bash
+    doppler setup
+    doppler login
+    ```
+  </Step>
+
+  <Step title="Start Development">
+    ```bash
+    pnpm dev
+    ```
+    Your application will be available at:
+    - Frontend: http://localhost:3000
+    - Backend API: http://localhost:3001
+  </Step>
+</Steps>
+
+## Architecture Overview
+
+Asset Laboratory Professional follows a monorepo architecture using pnpm workspaces:
+
+```
+packages/
+├── client/    # Next.js frontend application
+├── server/    # Express.js backend API
+└── shared/    # Shared types and utilities
+```
+
+## Technology Stack
+
+### Frontend
+- **Framework**: Next.js 15.5 with React 19
+- **UI Library**: HeroUI Pro 2.8.3
+- **Styling**: Tailwind CSS 4.1
+- **State Management**: React Context & Hooks
+- **Theme**: next-themes with dark/light/system modes
+
+### Backend
+- **Runtime**: Node.js 22+ with Express 5.1
+- **Language**: TypeScript 5.5
+- **Database**: PostgreSQL with Prisma 6.11.1
+- **Authentication**: JWT-based auth
+- **Validation**: Zod schema validation
+
+### DevOps & Tools
+- **Package Manager**: pnpm 9.15.2 with workspaces
+- **Build Tool**: Turbopack
+- **Secrets Management**: Doppler CLI 3.75.1
+- **Version Control**: Git with GitHub CLI
+- **CI/CD**: GitHub Actions with Dependabot
+
+## Core Concepts
+
+<CardGroup cols={2}>
+  <Card title="Assets" icon="box" href="/concepts/assets">
+    Learn about asset models, types, and management strategies
   </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+  <Card title="Authentication" icon="lock" href="/concepts/authentication">
+    Understand the authentication flow and security measures
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
+  <Card title="Database" icon="database" href="/concepts/database">
+    Explore the database schema and Prisma integration
   </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+  <Card title="Architecture" icon="sitemap" href="/concepts/architecture">
+    Deep dive into the system architecture and design patterns
   </Card>
-</Columns>
+</CardGroup>
 
-## Need inspiration?
+## Need Help?
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+- **Documentation**: You're here! Browse through our comprehensive guides
+- **API Reference**: Check out our [API documentation](/api-reference/introduction)
+- **GitHub Issues**: Report bugs or request features on [GitHub](https://github.com/Chrisdebug123/Asset_Laboratory_professional/issues)
+- **Community**: Join discussions in our [GitHub Discussions](https://github.com/Chrisdebug123/Asset_Laboratory_professional/discussions)
+
+## License
+
+Asset Laboratory Professional is open-source software licensed under the MIT license.

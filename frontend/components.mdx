@@ -1,0 +1,466 @@
+---
+title: "Component Architecture"
+description: "Understanding the component structure and patterns in Asset Laboratory Professional"
+---
+
+## Overview
+
+Asset Laboratory Professional uses a component-based architecture built on React 19 and HeroUI Pro. Components are organized by feature and follow consistent patterns for maintainability and reusability.
+
+## Component Structure
+
+```
+packages/client/components/
+├── layout/
+│   ├── Sidebar.tsx         # Main navigation sidebar
+│   ├── Header.tsx          # Application header
+│   └── Footer.tsx          # Application footer
+├── assets/
+│   ├── AssetTable.tsx      # Main asset data table
+│   ├── AssetForm.tsx       # Asset creation/edit form
+│   └── AssetCard.tsx       # Asset display card
+├── theme/
+│   ├── ThemeProvider.tsx   # Theme context provider
+│   ├── ThemeToggle.tsx     # Theme switcher component
+│   └── CommandMenu.tsx     # Theme command palette
+└── shared/
+    ├── Button.tsx          # Reusable button component
+    ├── Input.tsx           # Form input component
+    └── Modal.tsx           # Modal dialog component
+```
+
+## Core Components
+
+### AssetTable
+
+The main data display component with advanced features:
+
+```tsx
+import { AssetTable } from '@/components/assets/AssetTable';
+
+<AssetTable
+  data={assets}
+  columns={columns}
+  onSort={handleSort}
+  onFilter={handleFilter}
+  pagination={{
+    page: currentPage,
+    pageSize: 10,
+    total: totalAssets
+  }}
+/>
+```
+
+**Features:**
+- Sortable columns
+- Advanced filtering
+- Pagination
+- Row selection
+- Export functionality
+- Responsive design
+
+### Sidebar Navigation
+
+Collapsible sidebar with multi-level navigation:
+
+```tsx
+import { Sidebar } from '@/components/layout/Sidebar';
+
+<Sidebar
+  collapsed={isCollapsed}
+  onToggle={handleToggle}
+  activeRoute={currentRoute}
+/>
+```
+
+**Features:**
+- Collapsible/expandable
+- Active route highlighting
+- Icon-based navigation
+- Keyboard shortcuts
+- Mobile responsive
+
+### Theme Command Menu
+
+Draggable command palette for theme customization:
+
+```tsx
+import { CommandMenu } from '@/components/theme/CommandMenu';
+
+<CommandMenu
+  isOpen={isCommandMenuOpen}
+  onClose={handleClose}
+  position={menuPosition}
+  onDrag={handleDrag}
+/>
+```
+
+**Features:**
+- Draggable interface
+- Keyboard shortcuts (⌘K or Ctrl+K)
+- Theme preview
+- Color customization
+- Position persistence
+
+## HeroUI Pro Components
+
+Asset Laboratory Professional leverages HeroUI Pro components for consistent UI:
+
+### Button Component
+
+```tsx
+import { Button } from '@heroui/react';
+
+<Button
+  color="primary"
+  variant="solid"
+  size="md"
+  startContent={<IconPlus />}
+  onPress={handleClick}
+>
+  Add Asset
+</Button>
+```
+
+### Table Component
+
+```tsx
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell
+} from '@heroui/react';
+
+<Table
+  aria-label="Assets table"
+  sortDescriptor={sortDescriptor}
+  onSortChange={setSortDescriptor}
+>
+  <TableHeader columns={columns}>
+    {(column) => (
+      <TableColumn key={column.key} allowsSorting>
+        {column.label}
+      </TableColumn>
+    )}
+  </TableHeader>
+  <TableBody items={assets}>
+    {(item) => (
+      <TableRow key={item.id}>
+        {(columnKey) => (
+          <TableCell>{getKeyValue(item, columnKey)}</TableCell>
+        )}
+      </TableRow>
+    )}
+  </TableBody>
+</Table>
+```
+
+### Modal Component
+
+```tsx
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
+} from '@heroui/react';
+
+<Modal
+  isOpen={isOpen}
+  onOpenChange={onOpenChange}
+  placement="center"
+  backdrop="blur"
+>
+  <ModalContent>
+    {(onClose) => (
+      <>
+        <ModalHeader>Edit Asset</ModalHeader>
+        <ModalBody>
+          <AssetForm asset={selectedAsset} />
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="light" onPress={onClose}>
+            Cancel
+          </Button>
+          <Button color="primary" onPress={handleSave}>
+            Save
+          </Button>
+        </ModalFooter>
+      </>
+    )}
+  </ModalContent>
+</Modal>
+```
+
+## Component Patterns
+
+### Container/Presentational Pattern
+
+Separate business logic from presentation:
+
+```tsx
+// Container Component
+const AssetListContainer = () => {
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAssets().then(setAssets).finally(() => setLoading(false));
+  }, []);
+
+  return <AssetList assets={assets} loading={loading} />;
+};
+
+// Presentational Component
+const AssetList = ({ assets, loading }) => {
+  if (loading) return <Spinner />;
+
+  return (
+    <div className="grid gap-4">
+      {assets.map(asset => (
+        <AssetCard key={asset.id} asset={asset} />
+      ))}
+    </div>
+  );
+};
+```
+
+### Compound Components
+
+Create flexible, composable components:
+
+```tsx
+const Card = ({ children }) => (
+  <div className="rounded-lg border p-4">{children}</div>
+);
+
+Card.Header = ({ children }) => (
+  <div className="border-b pb-2 mb-2">{children}</div>
+);
+
+Card.Body = ({ children }) => (
+  <div className="py-2">{children}</div>
+);
+
+Card.Footer = ({ children }) => (
+  <div className="border-t pt-2 mt-2">{children}</div>
+);
+
+// Usage
+<Card>
+  <Card.Header>Asset Details</Card.Header>
+  <Card.Body>Content here</Card.Body>
+  <Card.Footer>Actions</Card.Footer>
+</Card>
+```
+
+### Custom Hooks
+
+Reusable logic with custom hooks:
+
+```tsx
+// useAssets hook
+const useAssets = () => {
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchAssets = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getAssets();
+      setAssets(data);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAssets();
+  }, []);
+
+  return { assets, loading, error, refetch: fetchAssets };
+};
+
+// Usage
+const AssetDashboard = () => {
+  const { assets, loading, error, refetch } = useAssets();
+
+  if (loading) return <Spinner />;
+  if (error) return <ErrorMessage error={error} />;
+
+  return <AssetTable data={assets} onRefresh={refetch} />;
+};
+```
+
+## Styling Components
+
+### Tailwind CSS Classes
+
+Use Tailwind utility classes for styling:
+
+```tsx
+<div className="flex items-center justify-between p-4 bg-background border-divider rounded-lg">
+  <h2 className="text-lg font-semibold text-foreground">
+    Asset Overview
+  </h2>
+  <Button
+    className="bg-primary text-primary-foreground hover:bg-primary/90"
+    size="sm"
+  >
+    View All
+  </Button>
+</div>
+```
+
+### Design Tokens
+
+Use design tokens for consistent spacing and colors:
+
+```tsx
+import { spacing, colors } from '@/lib/design-tokens';
+
+const StyledComponent = () => (
+  <div
+    style={{
+      padding: spacing.md,
+      backgroundColor: colors.background.secondary,
+      borderRadius: spacing.xs
+    }}
+  >
+    Content
+  </div>
+);
+```
+
+### Theme-Aware Components
+
+Create components that adapt to theme changes:
+
+```tsx
+import { useTheme } from 'next-themes';
+
+const ThemeAwareCard = ({ children }) => {
+  const { theme } = useTheme();
+
+  return (
+    <div
+      className={cn(
+        "rounded-lg p-4 transition-colors",
+        theme === 'dark'
+          ? "bg-gray-800 text-white"
+          : "bg-white text-gray-900"
+      )}
+    >
+      {children}
+    </div>
+  );
+};
+```
+
+## Best Practices
+
+### Component Guidelines
+
+<Checklist>
+  - [ ] Keep components focused and single-purpose
+  - [ ] Use TypeScript for type safety
+  - [ ] Implement proper error boundaries
+  - [ ] Add loading and error states
+  - [ ] Make components accessible (ARIA labels, keyboard navigation)
+  - [ ] Use memoization for expensive computations
+  - [ ] Implement proper prop validation
+  - [ ] Document component APIs with JSDoc
+</Checklist>
+
+### Performance Optimization
+
+```tsx
+// Use React.memo for expensive components
+const ExpensiveComponent = React.memo(({ data }) => {
+  return <ComplexVisualization data={data} />;
+}, (prevProps, nextProps) => {
+  return prevProps.data.id === nextProps.data.id;
+});
+
+// Use useMemo for expensive calculations
+const AssetSummary = ({ assets }) => {
+  const totalValue = useMemo(() => {
+    return assets.reduce((sum, asset) => sum + asset.value, 0);
+  }, [assets]);
+
+  return <div>Total: ${totalValue}</div>;
+};
+
+// Use useCallback for stable function references
+const AssetList = ({ onSelect }) => {
+  const handleSelect = useCallback((asset) => {
+    onSelect(asset.id);
+  }, [onSelect]);
+
+  return assets.map(asset => (
+    <AssetItem
+      key={asset.id}
+      asset={asset}
+      onSelect={handleSelect}
+    />
+  ));
+};
+```
+
+## Testing Components
+
+### Unit Testing
+
+```tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { AssetCard } from '@/components/assets/AssetCard';
+
+describe('AssetCard', () => {
+  const mockAsset = {
+    id: '1',
+    name: 'Test Asset',
+    value: 1000,
+    type: 'stock'
+  };
+
+  it('renders asset information', () => {
+    render(<AssetCard asset={mockAsset} />);
+
+    expect(screen.getByText('Test Asset')).toBeInTheDocument();
+    expect(screen.getByText('$1,000')).toBeInTheDocument();
+    expect(screen.getByText('stock')).toBeInTheDocument();
+  });
+
+  it('handles click events', () => {
+    const handleClick = jest.fn();
+    render(<AssetCard asset={mockAsset} onClick={handleClick} />);
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(handleClick).toHaveBeenCalledWith(mockAsset.id);
+  });
+});
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="HeroUI Pro" icon="palette" href="/frontend/heroui-pro">
+    Learn about HeroUI Pro integration
+  </Card>
+  <Card title="Theming" icon="paint-brush" href="/frontend/theming">
+    Explore theming and customization
+  </Card>
+  <Card title="State Management" icon="database" href="/frontend/state-management">
+    Understand state management patterns
+  </Card>
+  <Card title="API Integration" icon="plug" href="/guides/api-integration">
+    Connect components to the API
+  </Card>
+</CardGroup>
