@@ -1,11 +1,18 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Asset Laboratory API",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#0066CC",
+    "light": "#0088FF",
+    "dark": "#004499"
+  },
+  "openapi": ["openapi.yaml"],
+  "api": {
+    "playground": {
+      "mode": "simple"
+    },
+    "baseUrl": "http://localhost:3001/api"
   },
   "favicon": "/favicon.svg",
   "navigation": {
@@ -48,21 +55,28 @@
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Getting Started",
             "pages": [
               "api-reference/introduction"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Health",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/endpoints/health/health-check"
+            ]
+          },
+          {
+            "group": "Assets",
+            "pages": [
+              "api-reference/endpoints/assets/get-all-assets",
+              "api-reference/endpoints/assets/create-new-asset",
+              "api-reference/endpoints/assets/get-asset-by-id",
+              "api-reference/endpoints/assets/update-asset",
+              "api-reference/endpoints/assets/delete-asset"
             ]
           }
         ]

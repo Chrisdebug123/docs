@@ -1,0 +1,367 @@
+openapi: 3.0.0
+info:
+  title: Asset Laboratory Professional API
+  description: Enterprise-grade asset management system API
+  version: 1.0.0
+  contact:
+    name: Asset Laboratory Support
+    email: support@assetlab.com
+
+servers:
+  - url: http://localhost:3001/api
+    description: Development server
+  - url: https://api.assetlab.com
+    description: Production server
+
+tags:
+  - name: Assets
+    description: Asset management operations
+  - name: Health
+    description: System health and status
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Check if the API is running
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+                    description: Uptime in seconds
+                  environment:
+                    type: string
+                    example: development
+
+  /assets:
+    get:
+      tags: [Assets]
+      summary: Get all assets
+      description: Retrieve a list of all assets with optional filtering
+      parameters:
+        - name: type
+          in: query
+          description: Filter by asset type
+          schema:
+            type: string
+            enum: [stock, bond, crypto, commodity, real_estate, other]
+        - name: currency
+          in: query
+          description: Filter by currency code
+          schema:
+            type: string
+            example: USD
+        - name: limit
+          in: query
+          description: Maximum number of assets to return
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: List of assets retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Asset'
+                  total:
+                    type: integer
+                    description: Total number of assets
+                  timestamp:
+                    type: string
+                    format: date-time
+              example:
+                data:
+                  - id: "1"
+                    name: "Apple Stock"
+                    type: "stock"
+                    value: 5000
+                    currency: "USD"
+                    createdAt: "2024-01-01T00:00:00Z"
+                    updatedAt: "2024-01-01T00:00:00Z"
+                total: 1
+                timestamp: "2024-01-01T00:00:00Z"
+
+    post:
+      tags: [Assets]
+      summary: Create new asset
+      description: Add a new asset to the portfolio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetCreate'
+            example:
+              name: "Tesla Stock"
+              type: "stock"
+              value: 10000
+              currency: "USD"
+      responses:
+        '201':
+          description: Asset created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Asset'
+                  message:
+                    type: string
+                    example: Asset created successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /assets/{id}:
+    get:
+      tags: [Assets]
+      summary: Get asset by ID
+      description: Retrieve a specific asset by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Asset ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Asset retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Asset'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Assets]
+      summary: Update asset
+      description: Update an existing asset
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Asset ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssetUpdate'
+      responses:
+        '200':
+          description: Asset updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Asset'
+                  message:
+                    type: string
+                    example: Asset updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags: [Assets]
+      summary: Delete asset
+      description: Remove an asset from the portfolio
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Asset ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Asset deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Asset'
+                  message:
+                    type: string
+                    example: Asset deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    Asset:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - value
+        - currency
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier
+        name:
+          type: string
+          description: Asset name
+          minLength: 1
+          maxLength: 100
+        type:
+          type: string
+          description: Asset type
+          enum: [stock, bond, crypto, commodity, real_estate, other]
+        value:
+          type: number
+          description: Asset value
+          minimum: 0
+        currency:
+          type: string
+          description: Currency code (ISO 4217)
+          pattern: '^[A-Z]{3}$'
+          example: USD
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    AssetCreate:
+      type: object
+      required:
+        - name
+        - type
+        - value
+        - currency
+      properties:
+        name:
+          type: string
+          description: Asset name
+          minLength: 1
+          maxLength: 100
+        type:
+          type: string
+          description: Asset type
+          enum: [stock, bond, crypto, commodity, real_estate, other]
+        value:
+          type: number
+          description: Asset value
+          minimum: 0
+        currency:
+          type: string
+          description: Currency code (ISO 4217)
+          pattern: '^[A-Z]{3}$'
+          example: USD
+
+    AssetUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Asset name
+          minLength: 1
+          maxLength: 100
+        type:
+          type: string
+          description: Asset type
+          enum: [stock, bond, crypto, commodity, real_estate, other]
+        value:
+          type: number
+          description: Asset value
+          minimum: 0
+        currency:
+          type: string
+          description: Currency code (ISO 4217)
+          pattern: '^[A-Z]{3}$'
+          example: USD
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Bad Request
+            message: Invalid request parameters
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not Found
+            message: Asset not found
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Validation Error
+            message: Invalid input data
+            details:
+              name: Name is required
+              value: Value must be positive
